@@ -27,6 +27,29 @@
         border: 1px solid #2a2f31;
         image-rendering: pixelated;
       }
+      #controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        font-size: 0.85rem;
+      }
+      #controls select,
+      #controls button,
+      #controls input {
+        background: #161b1d;
+        color: #e6e6e6;
+        border: 1px solid #2a2f31;
+        border-radius: 4px;
+        padding: 0.35rem 0.5rem;
+        font: inherit;
+      }
+      #controls button {
+        cursor: pointer;
+      }
+      #controls button:hover {
+        border-color: #4ade80;
+      }
       #status {
         font-size: 0.85rem;
         color: #8a8f91;
@@ -35,6 +58,23 @@
   </head>
   <body>
     <h1>Conway's Game of Life</h1>
+    <div id="controls">
+      <label>pattern <select id="pattern">
+        <option value="glider">glider</option>
+        <option value="lwss">lwss</option>
+        <option value="pulsar">pulsar</option>
+        <option value="gosper-glider-gun">gosper-glider-gun</option>
+        <option value="block">block</option>
+        <option value="blinker">blinker</option>
+      </select></label>
+      <label>engine <select id="engine">
+        <option value="dense">dense</option>
+        <option value="sparse">sparse</option>
+      </select></label>
+      <label>speed <input id="speed" type="range" min="1" max="30" value="8" /></label>
+      <button id="playPause" type="button">Pause</button>
+      <button id="reset" type="button">Reset</button>
+    </div>
     <canvas id="board" width="720" height="432"></canvas>
     <div id="status">connecting...</div>
     <script src="viewer.js"></script>
