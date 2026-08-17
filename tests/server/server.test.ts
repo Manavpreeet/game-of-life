@@ -1,6 +1,6 @@
 import type { Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../src/server/server.js";
+import { createApp } from "../../src/server/server.js";
 
 describe("SSE generation stream", () => {
   let server: Server;

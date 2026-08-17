@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 async function loadElement(): Promise<void> {
   // @ts-expect-error pattern-view.js is a plain browser script with no type declarations
-  await import("../public/pattern-view.js");
+  await import("../../public/components/pattern-view.js");
 }
 
 function mount(attrs: Record<string, string>): Element {

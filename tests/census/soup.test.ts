@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { toString } from "../src/engine/grid.js";
-import { generateSoup } from "../src/census/soup.js";
+import { toString } from "../../src/engine/grid.js";
+import { generateSoup } from "../../src/census/soup.js";
 
 describe("soup generation", () => {
   it("is deterministic: the same seed reproduces an identical soup", () => {

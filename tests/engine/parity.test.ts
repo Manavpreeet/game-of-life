@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { create, get, set } from "../src/engine/grid.js";
-import { run as denseRun } from "../src/engine/life.js";
-import { fromCells, run as sparseRun, toCells } from "../src/engine/sparse.js";
-import { loadPattern, type PatternName } from "../src/io/patterns.js";
+import { create, get, set } from "../../src/engine/grid.js";
+import { run as denseRun } from "../../src/engine/life.js";
+import { fromCells, run as sparseRun, toCells } from "../../src/engine/sparse.js";
+import { loadPattern, type PatternName } from "../../src/io/patterns.js";
 
 function cellKeys(cells: ReadonlyArray<readonly [number, number]>): string[] {
   return cells.map(([x, y]) => `${x},${y}`).sort();

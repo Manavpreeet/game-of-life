@@ -78,11 +78,11 @@ async function loadCensus(): Promise<void> {
   HTMLCanvasElement.prototype.getContext = (() =>
     new FakeContext()) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   // @ts-expect-error plain browser scripts with no type declarations
-  await import("../public/pattern-view.js");
+  await import("../../public/components/pattern-view.js");
   // @ts-expect-error plain browser scripts with no type declarations
-  await import("../public/pattern-grid.js");
+  await import("../../public/components/pattern-grid.js");
   // @ts-expect-error plain browser scripts with no type declarations
-  await import("../public/census.js");
+  await import("../../public/census.js");
 }
 
 function currentSource(): FakeEventSource {

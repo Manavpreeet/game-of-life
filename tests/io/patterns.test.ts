@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { create, get, set } from "../src/engine/grid.js";
-import { run } from "../src/engine/life.js";
-import { loadPattern, PATTERN_NAMES, type PatternName } from "../src/io/patterns.js";
+import { create, get, set } from "../../src/engine/grid.js";
+import { run } from "../../src/engine/life.js";
+import { loadPattern, PATTERN_NAMES, type PatternName } from "../../src/io/patterns.js";
 
 function countLiveCells(name: PatternName): number {
   const { grid } = loadPattern(name);

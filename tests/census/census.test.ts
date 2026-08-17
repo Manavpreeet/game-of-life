@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runCensus } from "../src/census/census.js";
+import { runCensus } from "../../src/census/census.js";
 
 describe("runCensus: reproducibility", () => {
   it("produces an identical report for identical options", () => {

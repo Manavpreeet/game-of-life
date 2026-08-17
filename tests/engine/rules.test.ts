@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { create, get, set } from "../src/engine/grid.js";
-import { step } from "../src/engine/life.js";
-import { applyRule, DEFAULT_RULE, parseRulestring } from "../src/engine/rules.js";
+import { create, get, set } from "../../src/engine/grid.js";
+import { step } from "../../src/engine/life.js";
+import { applyRule, DEFAULT_RULE, parseRulestring } from "../../src/engine/rules.js";
 
 describe("rulestring parsing", () => {
   it("parses B3/S23 into the correct birth/survival sets", () => {

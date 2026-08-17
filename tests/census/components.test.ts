@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { create, set } from "../src/engine/grid.js";
-import { separateComponents } from "../src/census/components.js";
+import { create, set } from "../../src/engine/grid.js";
+import { separateComponents } from "../../src/census/components.js";
 
 describe("separateComponents", () => {
   it("isolates a block and a distant blinker as two components with correct shapes", () => {

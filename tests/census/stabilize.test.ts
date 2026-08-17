@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { create, fromString, set } from "../src/engine/grid.js";
-import { stabilize } from "../src/census/stabilize.js";
+import { create, fromString, set } from "../../src/engine/grid.js";
+import { stabilize } from "../../src/census/stabilize.js";
 
 describe("stabilize: still life", () => {
   it("detects a block as period 1 with zero displacement", () => {

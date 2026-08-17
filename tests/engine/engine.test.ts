@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { create, fromString, get, set, toString, type Grid } from "../src/engine/grid.js";
-import { run, step } from "../src/engine/life.js";
+import { create, fromString, get, set, toString, type Grid } from "../../src/engine/grid.js";
+import { run, step } from "../../src/engine/life.js";
 
 describe("block still life", () => {
   it("remains unchanged across generations", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clone, create, fromString, get, inBounds, set, toString } from "../src/engine/grid.js";
+import { clone, create, fromString, get, inBounds, set, toString } from "../../src/engine/grid.js";
 
 describe("grid", () => {
   it("creates a grid of the given size, all dead", () => {

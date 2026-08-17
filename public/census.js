@@ -31,7 +31,7 @@ function groupLabel(type) {
   return "Spaceships";
 }
 
-/** Markup for a `<pattern-view>` element (see pattern-view.js) showing `cells` at `cellSize` px/cell. */
+/** Markup for a `<pattern-view>` element (see components/pattern-view.js) showing `cells` at `cellSize` px/cell. */
 function patternView(cells, cellSize) {
   return `<pattern-view cells='${JSON.stringify(cells)}' cell-size="${cellSize}"></pattern-view>`;
 }
@@ -69,7 +69,7 @@ function renderReport(report) {
   reportEl.innerHTML = html.join("");
 }
 
-/** Markup for a `<pattern-grid>` element (see pattern-grid.js) animating `cells` live under `rule`. */
+/** Markup for a `<pattern-grid>` element (see components/pattern-grid.js) animating `cells` live under `rule`. */
 function patternGrid(cells, rule) {
   return `<pattern-grid cells='${JSON.stringify(cells)}' rule="${rule}" cell-px="14" margin="10"></pattern-grid>`;
 }

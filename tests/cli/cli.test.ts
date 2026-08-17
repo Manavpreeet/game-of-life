@@ -5,9 +5,9 @@ import {
   patternToCells,
   renderDense,
   renderSparseViewport,
-} from "../src/cli.js";
-import { create, fromString, set } from "../src/engine/grid.js";
-import { DEFAULT_RULE } from "../src/engine/rules.js";
+} from "../../src/cli.js";
+import { create, fromString, set } from "../../src/engine/grid.js";
+import { DEFAULT_RULE } from "../../src/engine/rules.js";
 
 describe("cli: parseArgs", () => {
   it("applies defaults when no flags are given", () => {

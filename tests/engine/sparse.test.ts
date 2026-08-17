@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_RULE, parseRulestring } from "../src/engine/rules.js";
-import { fromCells, run, step, toCells, type SparseGrid } from "../src/engine/sparse.js";
+import { DEFAULT_RULE, parseRulestring } from "../../src/engine/rules.js";
+import { fromCells, run, step, toCells, type SparseGrid } from "../../src/engine/sparse.js";
 
 function sortedCells(grid: SparseGrid): string[] {
   return toCells(grid)

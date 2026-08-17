@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { create, get, set, toString, type Grid } from "../src/engine/grid.js";
-import { run } from "../src/engine/life.js";
-import { parseRLE } from "../src/io/rle.js";
+import { create, get, set, toString, type Grid } from "../../src/engine/grid.js";
+import { run } from "../../src/engine/life.js";
+import { parseRLE } from "../../src/io/rle.js";
 
 /** Embed `grid` into a larger, zero-padded grid so boundary cells don't clip neighbor counts. */
 function pad(grid: Grid, margin: number): Grid {

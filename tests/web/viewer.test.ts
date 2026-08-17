@@ -86,7 +86,7 @@ async function loadViewer(): Promise<void> {
   HTMLCanvasElement.prototype.getContext = (() =>
     fakeCtx) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   // @ts-expect-error viewer.js is a plain browser script with no type declarations
-  await import("../public/viewer.js");
+  await import("../../public/viewer.js");
 }
 
 function currentSource(): FakeEventSource {

@@ -1,7 +1,7 @@
 import type { ServerResponse } from "node:http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_RULE } from "../src/engine/rules.js";
-import { streamGenerations, type GenerationFrame } from "../src/server/stream.js";
+import { DEFAULT_RULE } from "../../src/engine/rules.js";
+import { streamGenerations, type GenerationFrame } from "../../src/server/stream.js";
 
 class FakeResponse {
   headers: Record<string, string> | undefined;

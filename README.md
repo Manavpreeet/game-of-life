@@ -75,7 +75,17 @@ src/
 `engine/` has no knowledge of I/O or transport; `io/` turns text into `Grid`s
 the engine understands; `server/` and `cli.ts` are two independent front ends
 over the same engine and I/O layers. `index.ts` re-exports the pieces meant for
-external consumers.
+external consumers. `census/` (the automated pattern discovery feature; see
+below) is built entirely on top of `engine/` and `io/` and adds nothing to
+their public surface.
+
+`tests/` mirrors this layout (`engine/`, `io/`, `server/`, `cli/`, `census/`),
+plus a `web/` folder for the plain-script `public/` frontend's own tests and a
+top-level `index.test.ts` for the public API barrel. `public/` keeps each
+page's HTML/CSS/JS together at its own root (`index.html` + `viewer.js`,
+`census.html` + `census.css` + `census.js`) and factors the genuinely
+reusable UI pieces -- used across more than one view -- into
+`public/components/` (`pattern-view.js`, `pattern-grid.js`).
 
 ## Design decisions & tradeoffs
 
@@ -83,7 +93,7 @@ external consumers.
 computed from the _current_ generation's neighbor counts, not a
 partially-updated one. `life.ts` and `sparse.ts` both read exclusively from the
 old state and write into a fresh buffer/Set — this is what the glider
-translation test (`tests/engine.test.ts`) specifically catches: mutating a grid
+translation test (`tests/engine/engine.test.ts`) specifically catches: mutating a grid
 in place while stepping it would make each glider generation deform instead of
 translate cleanly.
 
@@ -110,7 +120,7 @@ HighLife, etc.) parses into birth/survival neighbor-count sets once, and
 Conway rules. This was a few lines of extra abstraction over hardcoding
 `neighbors === 2 || neighbors === 3`, and it turns "Conway's Game of Life" into
 "any B/S outer-totalistic cellular automaton" for free — exercised by the
-HighLife tests in `tests/rules.test.ts`.
+HighLife tests in `tests/engine/rules.test.ts`.
 
 **Why SSE over WebSocket.** The server only ever pushes generation frames to
 the client; the client's only "input" (pattern/engine/speed/play/pause) is
@@ -122,7 +132,7 @@ stream doesn't need. The tradeoff: the server keeps no per-connection session
 state, so "play" and "reset" both start the simulation fresh rather than
 resuming a paused generation count; "pause" is simply closing the connection,
 which the server observes via the response's `close` event to clear its
-interval and free resources (verified in `tests/server.test.ts`).
+interval and free resources (verified in `tests/server/server.test.ts`).
 
 ## Testing
 
@@ -228,7 +238,7 @@ generations, then renders the ranked report client-side.
 
 A census is fully determined by its options (soup count, size, density, rule,
 seed start) -- the same inputs always produce the same tally, which is what
-makes a census result independently re-verifiable. `tests/census.test.ts`
+makes a census result independently re-verifiable. `tests/census/census.test.ts`
 locks this in end-to-end, including a fully-predictable all-density-zero case
 where every soup is guaranteed extinct.
 

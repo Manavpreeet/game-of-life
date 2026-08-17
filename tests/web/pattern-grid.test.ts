@@ -26,7 +26,7 @@ async function loadElement(): Promise<void> {
   HTMLCanvasElement.prototype.getContext = (() =>
     fakeCtx) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   // @ts-expect-error pattern-grid.js is a plain browser script with no type declarations
-  await import("../public/pattern-grid.js");
+  await import("../../public/components/pattern-grid.js");
 }
 
 function mount(attrs: Record<string, string>): Element {

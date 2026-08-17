@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canonicalKey } from "../src/census/canonical.js";
+import { canonicalKey } from "../../src/census/canonical.js";
 
 const GLIDER: ReadonlyArray<readonly [number, number]> = [
   [1, 0],

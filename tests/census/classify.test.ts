@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { classifyObject } from "../src/census/classify.js";
-import { loadPattern } from "../src/io/patterns.js";
-import { get } from "../src/engine/grid.js";
+import { classifyObject } from "../../src/census/classify.js";
+import { loadPattern } from "../../src/io/patterns.js";
+import { get } from "../../src/engine/grid.js";
 
 function liveCellsOf(name: Parameters<typeof loadPattern>[0]): Array<[number, number]> {
   const { grid } = loadPattern(name);
