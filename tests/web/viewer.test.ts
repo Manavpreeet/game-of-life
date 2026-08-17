@@ -99,6 +99,10 @@ function fireChange(el: Element): void {
   el.dispatchEvent(new Event("change"));
 }
 
+function firePointer(target: Element, type: string, clientX: number, clientY: number): void {
+  target.dispatchEvent(new PointerEvent(type, { clientX, clientY, pointerId: 1, bubbles: true }));
+}
+
 describe("web viewer", () => {
   beforeEach(async () => {
     await loadViewer();
@@ -189,5 +193,81 @@ describe("web viewer", () => {
 
     expect(FakeEventSource.instances[0]?.closed).toBe(true);
     expect(FakeEventSource.instances[1]?.closed).toBe(false);
+  });
+
+  describe("dragging", () => {
+    function board(): HTMLCanvasElement {
+      return document.getElementById("board") as HTMLCanvasElement;
+    }
+
+    it("pans drawn cells by the drag delta, redrawing immediately (no new frame needed)", () => {
+      currentSource().emit("generation", { generation: 0, width: 10, height: 10, cells: [[0, 0]] });
+      fakeCtx.calls.length = 0;
+
+      firePointer(board(), "pointerdown", 100, 100);
+      firePointer(board(), "pointermove", 130, 115); // dx=+30, dy=+15
+
+      const cellFill = fakeCtx.calls.find((c) => c.fillStyle === "#4ade80");
+      expect(cellFill).toMatchObject({ x: 30, y: 15 });
+    });
+
+    it("does not pan on pointermove before a pointerdown", () => {
+      currentSource().emit("generation", { generation: 0, width: 10, height: 10, cells: [[0, 0]] });
+      fakeCtx.calls.length = 0;
+
+      firePointer(board(), "pointermove", 500, 500);
+      expect(fakeCtx.calls).toHaveLength(0);
+    });
+
+    it("stops panning after pointerup", () => {
+      currentSource().emit("generation", { generation: 0, width: 10, height: 10, cells: [[0, 0]] });
+      firePointer(board(), "pointerdown", 100, 100);
+      firePointer(board(), "pointermove", 130, 100);
+      firePointer(board(), "pointerup", 130, 100);
+
+      fakeCtx.calls.length = 0;
+      firePointer(board(), "pointermove", 400, 400);
+      expect(fakeCtx.calls).toHaveLength(0);
+    });
+
+    it("keeps the pan applied to subsequent frames from the server", () => {
+      currentSource().emit("generation", { generation: 0, width: 10, height: 10, cells: [[0, 0]] });
+      firePointer(board(), "pointerdown", 100, 100);
+      firePointer(board(), "pointermove", 130, 100); // +30
+      firePointer(board(), "pointerup", 130, 100);
+
+      fakeCtx.calls.length = 0;
+      currentSource().emit("generation", { generation: 1, width: 10, height: 10, cells: [[0, 0]] });
+      const cellFill = fakeCtx.calls.find((c) => c.fillStyle === "#4ade80");
+      expect(cellFill).toMatchObject({ x: 30, y: 0 });
+    });
+
+    it("resets pan to origin on reconnect (pattern/engine/speed change)", () => {
+      currentSource().emit("generation", { generation: 0, width: 10, height: 10, cells: [[0, 0]] });
+      firePointer(board(), "pointerdown", 100, 100);
+      firePointer(board(), "pointermove", 200, 100);
+      firePointer(board(), "pointerup", 200, 100);
+
+      fireChange(document.getElementById("pattern") as HTMLSelectElement);
+
+      fakeCtx.calls.length = 0;
+      currentSource().emit("generation", { generation: 0, width: 10, height: 10, cells: [[0, 0]] });
+      const cellFill = fakeCtx.calls.find((c) => c.fillStyle === "#4ade80");
+      expect(cellFill).toMatchObject({ x: 0, y: 0 });
+    });
+
+    it("resets pan to origin when reset is clicked", () => {
+      currentSource().emit("generation", { generation: 0, width: 10, height: 10, cells: [[0, 0]] });
+      firePointer(board(), "pointerdown", 100, 100);
+      firePointer(board(), "pointermove", 200, 100);
+      firePointer(board(), "pointerup", 200, 100);
+
+      (document.getElementById("reset") as HTMLButtonElement).click();
+
+      fakeCtx.calls.length = 0;
+      currentSource().emit("generation", { generation: 0, width: 10, height: 10, cells: [[0, 0]] });
+      const cellFill = fakeCtx.calls.find((c) => c.fillStyle === "#4ade80");
+      expect(cellFill).toMatchObject({ x: 0, y: 0 });
+    });
   });
 });

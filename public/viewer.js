@@ -9,16 +9,60 @@ const resetButton = document.getElementById("reset");
 
 let source = null;
 let playing = true;
+let lastFrame = null;
+let panPxX = 0;
+let panPxY = 0;
 
 function draw(frame) {
+  lastFrame = frame;
   const cellSize = Math.min(canvas.width / frame.width, canvas.height / frame.height);
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#4ade80";
   for (const [x, y] of frame.cells) {
-    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+    ctx.fillRect(x * cellSize + panPxX, y * cellSize + panPxY, cellSize, cellSize);
   }
 }
+
+// Click-and-drag pans the view: a spaceship that drifts off the server's
+// fixed viewport can be dragged back into view. Purely a rendering offset --
+// it never touches the stream or the simulation, so it survives redraws
+// without any server-side awareness of it.
+(function setUpDragging() {
+  let dragging = false;
+  let startClientX = 0;
+  let startClientY = 0;
+  let startPanX = 0;
+  let startPanY = 0;
+
+  canvas.style.cursor = "grab";
+  canvas.style.touchAction = "none";
+
+  canvas.addEventListener("pointerdown", (event) => {
+    dragging = true;
+    startClientX = event.clientX;
+    startClientY = event.clientY;
+    startPanX = panPxX;
+    startPanY = panPxY;
+    canvas.setPointerCapture?.(event.pointerId);
+    canvas.style.cursor = "grabbing";
+  });
+
+  canvas.addEventListener("pointermove", (event) => {
+    if (!dragging) return;
+    panPxX = startPanX + (event.clientX - startClientX);
+    panPxY = startPanY + (event.clientY - startClientY);
+    if (lastFrame) draw(lastFrame);
+  });
+
+  const endDrag = () => {
+    dragging = false;
+    canvas.style.cursor = "grab";
+  };
+  canvas.addEventListener("pointerup", endDrag);
+  canvas.addEventListener("pointerleave", endDrag);
+  canvas.addEventListener("pointercancel", endDrag);
+})();
 
 function streamParams() {
   const params = new URLSearchParams();
@@ -43,6 +87,8 @@ function disconnect() {
 // and (re)start (reconnect). This keeps the server trivially stateless.
 function connect() {
   disconnect();
+  panPxX = 0;
+  panPxY = 0;
   source = new EventSource("/events?" + streamParams().toString());
   source.addEventListener("generation", (event) => {
     const frame = JSON.parse(event.data);
