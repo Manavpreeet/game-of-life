@@ -38,6 +38,14 @@ function mount(attrs: Record<string, string>): Element {
   return el;
 }
 
+function firePointer(target: Element, type: string, clientX: number, clientY: number): void {
+  target.dispatchEvent(new PointerEvent(type, { clientX, clientY, pointerId: 1, bubbles: true }));
+}
+
+function firstCellFill(): FillRectCall | undefined {
+  return fakeCtx.calls.find((c) => c.fillStyle === "#4ade80");
+}
+
 const GLIDER = "[[1,0],[2,1],[0,2],[1,2],[2,2]]";
 
 describe("<pattern-grid>", () => {
@@ -121,5 +129,87 @@ describe("<pattern-grid>", () => {
     vi.advanceTimersByTime(300 * 4);
     // a glider returns to 5 live cells every 4 generations under B3/S23
     expect(el.querySelector(".pattern-grid-label")?.textContent).toBe("gen 4 · 5 live cells");
+  });
+
+  describe("dragging", () => {
+    // glider cell (1,0), margin 5, cell-px 10 -> offsetX/Y = -5,
+    // base pixel position = (1 - (-5)) * 10 = 60, (0 - (-5)) * 10 = 50.
+    const BASE_X = 60;
+    const BASE_Y = 50;
+
+    it("pans the drawn cells by the drag delta while dragging", () => {
+      const el = mount({ cells: GLIDER, "cell-px": "10", margin: "5" });
+      const canvas = el.querySelector("canvas") as HTMLCanvasElement;
+
+      fakeCtx.calls.length = 0;
+      firePointer(canvas, "pointerdown", 100, 100);
+      firePointer(canvas, "pointermove", 130, 115); // dx=+30, dy=+15
+
+      expect(firstCellFill()).toMatchObject({ x: BASE_X + 30, y: BASE_Y + 15 });
+    });
+
+    it("does not pan on pointermove before a pointerdown", () => {
+      const el = mount({ cells: GLIDER, "cell-px": "10", margin: "5" });
+      const canvas = el.querySelector("canvas") as HTMLCanvasElement;
+
+      fakeCtx.calls.length = 0;
+      firePointer(canvas, "pointermove", 500, 500);
+      expect(fakeCtx.calls).toHaveLength(0); // no redraw triggered at all
+    });
+
+    it("stops panning after pointerup", () => {
+      const el = mount({ cells: GLIDER, "cell-px": "10", margin: "5" });
+      const canvas = el.querySelector("canvas") as HTMLCanvasElement;
+
+      firePointer(canvas, "pointerdown", 100, 100);
+      firePointer(canvas, "pointermove", 130, 100); // dx=+30
+      firePointer(canvas, "pointerup", 130, 100);
+
+      fakeCtx.calls.length = 0;
+      firePointer(canvas, "pointermove", 400, 400); // should be ignored now
+      expect(fakeCtx.calls).toHaveLength(0);
+    });
+
+    it("accumulates pan across multiple drags instead of resetting each time", () => {
+      const el = mount({ cells: GLIDER, "cell-px": "10", margin: "5" });
+      const canvas = el.querySelector("canvas") as HTMLCanvasElement;
+
+      firePointer(canvas, "pointerdown", 100, 100);
+      firePointer(canvas, "pointermove", 120, 100); // +20
+      firePointer(canvas, "pointerup", 120, 100);
+
+      fakeCtx.calls.length = 0;
+      firePointer(canvas, "pointerdown", 0, 0);
+      firePointer(canvas, "pointermove", 10, 0); // another +10, total +30
+
+      expect(firstCellFill()).toMatchObject({ x: BASE_X + 30, y: BASE_Y });
+    });
+
+    it("panning does not affect the simulation itself -- stepping still advances normally", () => {
+      const el = mount({ cells: GLIDER, "cell-px": "10", margin: "5" });
+      const canvas = el.querySelector("canvas") as HTMLCanvasElement;
+
+      firePointer(canvas, "pointerdown", 100, 100);
+      firePointer(canvas, "pointermove", 150, 100);
+      firePointer(canvas, "pointerup", 150, 100);
+
+      vi.advanceTimersByTime(300 * 4);
+      // a glider still returns to 5 live cells every 4 generations, panned or not
+      expect(el.querySelector(".pattern-grid-label")?.textContent).toBe("gen 4 · 5 live cells");
+    });
+
+    it("resets pan to origin when the pattern changes (cells attribute updates)", () => {
+      const el = mount({ cells: GLIDER, "cell-px": "10", margin: "5" });
+      const canvas = el.querySelector("canvas") as HTMLCanvasElement;
+
+      firePointer(canvas, "pointerdown", 100, 100);
+      firePointer(canvas, "pointermove", 200, 100);
+      firePointer(canvas, "pointerup", 200, 100);
+
+      fakeCtx.calls.length = 0;
+      el.setAttribute("cells", "[[0,0],[1,0],[0,1],[1,1]]"); // block, margin 5 -> offset -5
+      // block cell (0,0) with no pan -> px = (0-(-5))*10=50, py=50
+      expect(firstCellFill()).toMatchObject({ x: 50, y: 50 });
+    });
   });
 });

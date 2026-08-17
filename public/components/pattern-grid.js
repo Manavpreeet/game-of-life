@@ -7,6 +7,11 @@
  * moving, which a `<pattern-view>` snapshot can't. `cells` are pre-
  * normalized (min x/y = 0) coordinate pairs.
  *
+ * The canvas is draggable: the simulation itself is never clipped (`live`
+ * is an unbounded cell set), only the fixed-size *view* into it is, so a
+ * spaceship that drifts past the initial viewport can be dragged back into
+ * view rather than being lost for good.
+ *
  * Stepping/rule-parsing comes from life-engine.js (must be loaded first) --
  * see that file for why the logic is duplicated from the TypeScript engine
  * rather than imported.
@@ -27,6 +32,9 @@ class PatternGrid extends HTMLElement {
     this.canvas = this.querySelector("canvas");
     this.ctx = this.canvas.getContext("2d");
     this.label = this.querySelector(".pattern-grid-label");
+    this.panPxX = 0;
+    this.panPxY = 0;
+    this.setUpDragging();
     this.restart();
   }
 
@@ -59,12 +67,54 @@ class PatternGrid extends HTMLElement {
     }
   }
 
+  /** Click-and-drag pans the view (pixel offset only -- never touches the simulation state). Registered once; reads live cellPx/redraw off `this` so it keeps working across restarts. */
+  setUpDragging() {
+    let dragging = false;
+    let startClientX = 0;
+    let startClientY = 0;
+    let startPanX = 0;
+    let startPanY = 0;
+
+    this.canvas.style.cursor = "grab";
+    this.canvas.style.touchAction = "none";
+
+    this.canvas.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      startClientX = event.clientX;
+      startClientY = event.clientY;
+      startPanX = this.panPxX;
+      startPanY = this.panPxY;
+      // Not every environment implements pointer capture (e.g. jsdom in
+      // tests) -- it's a nice-to-have (keeps the drag going even if the
+      // cursor leaves the canvas mid-drag), not a requirement.
+      this.canvas.setPointerCapture?.(event.pointerId);
+      this.canvas.style.cursor = "grabbing";
+    });
+
+    this.canvas.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+      this.panPxX = startPanX + (event.clientX - startClientX);
+      this.panPxY = startPanY + (event.clientY - startClientY);
+      this.redraw?.();
+    });
+
+    const endDrag = () => {
+      dragging = false;
+      this.canvas.style.cursor = "grab";
+    };
+    this.canvas.addEventListener("pointerup", endDrag);
+    this.canvas.addEventListener("pointerleave", endDrag);
+    this.canvas.addEventListener("pointercancel", endDrag);
+  }
+
   restart() {
     this.stop();
     const cellPx = Number(this.getAttribute("cell-px") ?? DEFAULT_CELL_PX);
     const margin = Number(this.getAttribute("margin") ?? DEFAULT_MARGIN);
     const rule = parseRulestring(this.getAttribute("rule"));
     const initial = this.parsedCells();
+    this.panPxX = 0;
+    this.panPxY = 0;
 
     let live = new Set(initial.map(([x, y]) => `${x},${y}`));
     let generation = 0;
@@ -94,16 +144,18 @@ class PatternGrid extends HTMLElement {
         this.ctx.fillStyle = "#4ade80";
         for (const key of live) {
           const [x, y] = key.split(",").map(Number);
-          const dx = x - offsetX;
-          const dy = y - offsetY;
-          if (dx >= 0 && dx < viewCols && dy >= 0 && dy < viewRows) {
-            this.ctx.fillRect(dx * cellPx, dy * cellPx, cellPx, cellPx);
-          }
+          const px = (x - offsetX) * cellPx + this.panPxX;
+          const py = (y - offsetY) * cellPx + this.panPxY;
+          // No visibility bounds-check: dragging can bring any cell into
+          // view, and the canvas already clips fillRect calls outside its
+          // pixel bounds for free.
+          this.ctx.fillRect(px, py, cellPx, cellPx);
         }
       }
       this.label.textContent = `gen ${generation} · ${live.size} live cells`;
     };
 
+    this.redraw = draw;
     draw();
     this.timer = setInterval(() => {
       live = stepLiveCells(live, rule);
