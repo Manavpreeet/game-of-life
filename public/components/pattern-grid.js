@@ -7,49 +7,11 @@
  * moving, which a `<pattern-view>` snapshot can't. `cells` are pre-
  * normalized (min x/y = 0) coordinate pairs.
  *
- * The step logic here mirrors src/engine/sparse.ts and src/engine/rules.ts
- * (live-cell-set stepping, Bxx/Sxx rulestring parsing): this is a plain
- * browser script with no build step, so it can't import the TypeScript
- * engine directly, and duplicating this ~20-line core is the pragmatic
- * tradeoff over adding a bundler for one small widget.
+ * Stepping/rule-parsing comes from life-engine.js (must be loaded first) --
+ * see that file for why the logic is duplicated from the TypeScript engine
+ * rather than imported.
  */
-const NEIGHBOR_OFFSETS = [
-  [-1, -1],
-  [0, -1],
-  [1, -1],
-  [-1, 0],
-  [1, 0],
-  [-1, 1],
-  [0, 1],
-  [1, 1],
-];
-
-function parseRulestring(raw) {
-  const match = /^B([0-8]*)\/S([0-8]*)$/i.exec((raw ?? "").trim());
-  if (!match) return { births: new Set([3]), survivals: new Set([2, 3]) };
-  return {
-    births: new Set([...match[1]].map(Number)),
-    survivals: new Set([...match[2]].map(Number)),
-  };
-}
-
-function stepLiveCells(live, rule) {
-  const neighborCounts = new Map();
-  for (const key of live) {
-    const [x, y] = key.split(",").map(Number);
-    for (const [dx, dy] of NEIGHBOR_OFFSETS) {
-      const neighborKey = `${x + dx},${y + dy}`;
-      neighborCounts.set(neighborKey, (neighborCounts.get(neighborKey) ?? 0) + 1);
-    }
-    if (!neighborCounts.has(key)) neighborCounts.set(key, 0);
-  }
-  const next = new Set();
-  for (const [key, count] of neighborCounts) {
-    const set = live.has(key) ? rule.survivals : rule.births;
-    if (set.has(count)) next.add(key);
-  }
-  return next;
-}
+const { parseRulestring, stepLiveCells } = window.LifeEngine;
 
 const DEFAULT_CELL_PX = 14;
 const DEFAULT_MARGIN = 10;

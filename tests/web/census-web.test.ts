@@ -78,6 +78,8 @@ async function loadCensus(): Promise<void> {
   HTMLCanvasElement.prototype.getContext = (() =>
     new FakeContext()) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   // @ts-expect-error plain browser scripts with no type declarations
+  await import("../../public/components/life-engine.js");
+  // @ts-expect-error plain browser scripts with no type declarations
   await import("../../public/components/pattern-view.js");
   // @ts-expect-error plain browser scripts with no type declarations
   await import("../../public/components/pattern-grid.js");

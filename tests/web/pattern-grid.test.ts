@@ -25,6 +25,8 @@ async function loadElement(): Promise<void> {
   fakeCtx.calls.length = 0;
   HTMLCanvasElement.prototype.getContext = (() =>
     fakeCtx) as unknown as typeof HTMLCanvasElement.prototype.getContext;
+  // @ts-expect-error life-engine.js is a plain browser script with no type declarations
+  await import("../../public/components/life-engine.js");
   // @ts-expect-error pattern-grid.js is a plain browser script with no type declarations
   await import("../../public/components/pattern-grid.js");
 }
