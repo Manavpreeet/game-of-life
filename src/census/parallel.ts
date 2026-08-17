@@ -1,3 +1,8 @@
+import { Worker } from "node:worker_threads";
+import { mergeCensusReports, type CensusOptions, type CensusReport } from "./census.js";
+
+const WORKER_MODULE_URL = new URL("./census-worker-bootstrap.mjs", import.meta.url);
+
 /** One worker's slice of a census run: a contiguous seed range of its own. */
 export interface CensusShard {
   readonly soups: number;
@@ -34,4 +39,35 @@ export function computeShards(
     cursor += size;
   }
   return shards;
+}
+
+/** Run one shard in its own worker thread, resolving with its partial CensusReport. */
+function runShard(options: CensusOptions, shard: CensusShard): Promise<CensusReport> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(WORKER_MODULE_URL, {
+      workerData: { ...options, soups: shard.soups, seedStart: shard.seedStart },
+    });
+    worker.once("message", (report: CensusReport) => {
+      resolve(report);
+      void worker.terminate();
+    });
+    worker.once("error", reject);
+  });
+}
+
+/**
+ * Run a census sharded across up to `workerCount` worker threads and merge
+ * the results (see mergeCensusReports). Reproducible and result-identical
+ * to a single-threaded `runCensus` over the same options -- sharding only
+ * changes which thread runs which seeds, never the seeds themselves (see
+ * computeShards) -- so this exists purely for throughput on multi-core
+ * machines, not for any difference in output.
+ */
+export async function runCensusParallel(
+  options: CensusOptions,
+  workerCount: number,
+): Promise<CensusReport> {
+  const shards = computeShards(options.soups, options.seedStart, workerCount);
+  const reports = await Promise.all(shards.map((shard) => runShard(options, shard)));
+  return mergeCensusReports(reports);
 }
