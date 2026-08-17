@@ -240,3 +240,56 @@ export function renderCensusSummary(report: CensusReport): string {
 
   return lines.join("\n");
 }
+
+/**
+ * Combine independently-run partial census reports (e.g. one per
+ * worker_threads shard, each covering a disjoint seed range of the same
+ * options) into a single report, as if they'd all been tallied together by
+ * `runCensus`. Counts by canonical key are summed; `examplePattern` keeps
+ * whichever shard's example was encountered first. `soups`/width/height/
+ * density/rule are taken from the first report (shards of one run always
+ * share these).
+ */
+export function mergeCensusReports(reports: readonly CensusReport[]): CensusReport {
+  if (reports.length === 0) {
+    throw new Error("mergeCensusReports requires at least one report");
+  }
+  const first = reports[0] as CensusReport;
+
+  let soups = 0;
+  let extinctSoups = 0;
+  let unstabilizedSoups = 0;
+  let unclassifiedObjects = 0;
+  const tally = new Map<string, CensusEntry>();
+
+  for (const report of reports) {
+    soups += report.soups;
+    extinctSoups += report.extinctSoups;
+    unstabilizedSoups += report.unstabilizedSoups;
+    unclassifiedObjects += report.unclassifiedObjects;
+    for (const entry of report.entries) {
+      const existing = tally.get(entry.canonicalKey);
+      tally.set(
+        entry.canonicalKey,
+        existing ? { ...existing, count: existing.count + entry.count } : entry,
+      );
+    }
+  }
+
+  const entries = [...tally.values()].sort(
+    (a, b) =>
+      TYPE_ORDER[a.type] - TYPE_ORDER[b.type] || b.count - a.count || a.name.localeCompare(b.name),
+  );
+
+  return {
+    soups,
+    width: first.width,
+    height: first.height,
+    density: first.density,
+    rule: first.rule,
+    extinctSoups,
+    unstabilizedSoups,
+    unclassifiedObjects,
+    entries,
+  };
+}
