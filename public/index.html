@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Conway's Game of Life</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 2rem;
+        background: #0b0f10;
+        color: #e6e6e6;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      h1 {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin: 0;
+      }
+      canvas {
+        background: #000;
+        border: 1px solid #2a2f31;
+        image-rendering: pixelated;
+      }
+      #status {
+        font-size: 0.85rem;
+        color: #8a8f91;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Conway's Game of Life</h1>
+    <canvas id="board" width="720" height="432"></canvas>
+    <div id="status">connecting...</div>
+    <script src="viewer.js"></script>
+  </body>
+</html>
