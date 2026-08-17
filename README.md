@@ -40,7 +40,8 @@ engine, and speed controls.
 - GitHub Actions CI (typecheck, lint, test on Node 20.x and 22.x)
 - Automated pattern discovery: seeded random "soup" search that detects,
   classifies, and tallies emergent still lifes/oscillators/spaceships into a
-  ranked census, on both the CLI (`census` subcommand) and the web (`/census.html`)
+  ranked census, on both the CLI (`census` subcommand) and the web (`/census.html`),
+  parallelizable across CPU cores via `worker_threads` (`--workers N`)
 
 ## Quick start
 
@@ -218,6 +219,7 @@ CLI:
 ```bash
 npm run dev -- census --soups 5000 --size 16 --density 0.4
 npm run dev -- census --soups 1000 --seed-start 0 --json --out census.json
+npm run dev -- census --soups 5000 --workers 8   # shard across 8 worker_threads
 ```
 
 ```
@@ -233,6 +235,28 @@ Web: run `npm run serve`, open `http://localhost:3000/census.html`, set the
 soup count/size/density/rule and click **Run census** -- the server streams
 progress over SSE (`/census-events`) exactly as the live viewer streams
 generations, then renders the ranked report client-side.
+
+### Performance: parallel soup search
+
+`--workers N` shards the seed range across `N` worker_threads
+(`src/census/parallel.ts`), each running an ordinary `runCensus` over its own
+disjoint slice, merged back with `mergeCensusReports` -- byte-for-byte
+identical output to a single-threaded run over the same options; sharding
+changes only which thread runs which seeds, never the result. Measured via
+`npm run bench:census` (400 soups, 16x16, density 0.4, this machine's 11
+CPUs):
+
+```
+single-threaded:       169.6 soups/sec (2359.0ms)
+parallel ( 2 workers):  232.7 soups/sec (1719.0ms) -> 1.4x
+parallel (11 workers):  423.7 soups/sec ( 944.0ms) -> 2.5x
+```
+
+Sub-linear scaling (11 workers gets 2.5x, not 11x) is expected here, not a
+bug: each worker thread has real startup + `postMessage` structured-clone
+overhead, which dominates at this soup count/size. It amortizes better on
+larger runs -- see the honesty note below on where the real remaining cost
+(per-object classification) sits.
 
 ### Reproducibility
 
@@ -259,13 +283,14 @@ where every soup is guaranteed extinct.
   a structure that drifts to the edge is clipped exactly as the base engine's
   "outside the grid is dead" rule already defines -- an accepted property of
   a bounded field, not a bug.
-- **Performance:** classification re-runs each separated object on a padded
-  dense field (default: 100 generations, 60-cell margin) rather than the
-  sparse engine, so a very large soup count is slow by design in this scoped
-  version. Parallelizing the search across `worker_threads` and switching
-  classification to the sparse engine (both noted as optional, unimplemented
-  extensions in the feature spec this was built from) would be the next step
-  for a production-scale run.
+- **Performance:** the search itself now parallelizes across `worker_threads`
+  (`--workers N`, see above). What's still unoptimized: `classify.ts`
+  re-runs each separated object on a _padded dense field_ (default: 100
+  generations, 60-cell margin) rather than the sparse engine, so
+  classification cost scales with the padded field's area, not the object's
+  actual size -- switching it to the sparse engine (noted as optional in the
+  feature spec this was built from, alongside parallelization) would be the
+  next real throughput win, on top of the worker-thread speedup.
 - **Not handled:** very-high-period oscillators that exceed the generation
   cap (reported as `unstabilized`), and two spaceships that collide
   mid-census (whatever debris results is classified as its own object, not

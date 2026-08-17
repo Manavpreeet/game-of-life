@@ -14,7 +14,8 @@
     "format:check": "prettier --check .",
     "dev": "tsx src/cli.ts",
     "serve": "tsx src/server/server.ts",
-    "bench": "tsx bench/bench.ts"
+    "bench": "tsx bench/bench.ts",
+    "bench:census": "tsx bench/census-bench.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
