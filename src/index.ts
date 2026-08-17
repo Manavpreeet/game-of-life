@@ -62,8 +62,4 @@ export {
 
 export { parseRLE, type ParsedRLE } from "./io/rle.js";
 
-export {
-  loadPattern,
-  PATTERN_NAMES,
-  type PatternName,
-} from "./io/patterns.js";
+export { loadPattern, PATTERN_NAMES, type PatternName } from "./io/patterns.js";

@@ -77,7 +77,7 @@ external consumers.
 ## Design decisions & tradeoffs
 
 **Simultaneous update via double buffering.** Every cell's next state must be
-computed from the *current* generation's neighbor counts, not a
+computed from the _current_ generation's neighbor counts, not a
 partially-updated one. `life.ts` and `sparse.ts` both read exclusively from the
 old state and write into a fresh buffer/Set — this is what the glider
 translation test (`tests/engine.test.ts`) specifically catches: mutating a grid
@@ -87,13 +87,13 @@ translate cleanly.
 **Dense vs sparse.** The dense engine iterates every cell in a fixed
 `width x height` buffer every generation — O(width x height) regardless of
 activity. The sparse engine represents only live cells and steps just those
-cells plus their neighbors, so cost scales with *activity*, not grid size, and
+cells plus their neighbors, so cost scales with _activity_, not grid size, and
 the grid is effectively unbounded. Measured on this machine (`npm run bench`):
 
-| Scenario | dense | sparse | winner |
-|---|---|---|---|
-| Glider on a 1000x1000 field, 400 gens | 30.3 gens/sec | 88,580.5 gens/sec | sparse, ~2,926x |
-| 50% random soup on 150x150, 100 gens | 1,235.9 gens/sec | 358.4 gens/sec | dense, ~3.4x |
+| Scenario                              | dense            | sparse            | winner          |
+| ------------------------------------- | ---------------- | ----------------- | --------------- |
+| Glider on a 1000x1000 field, 400 gens | 30.3 gens/sec    | 88,580.5 gens/sec | sparse, ~2,926x |
+| 50% random soup on 150x150, 100 gens  | 1,235.9 gens/sec | 358.4 gens/sec    | dense, ~3.4x    |
 
 Sparse wins by orders of magnitude on sparse, spread-out patterns (most
 interesting Life patterns) because dense pays for empty space it doesn't need

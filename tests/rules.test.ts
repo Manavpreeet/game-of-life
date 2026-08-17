@@ -33,8 +33,11 @@ describe("HighLife (B36/S23)", () => {
     // Dead center cell surrounded by exactly 6 live neighbors (6 of its 8 Moore cells).
     const grid = create(5, 5);
     const sixNeighbors: ReadonlyArray<readonly [number, number]> = [
-      [-1, -1], [0, -1], [1, -1],
-      [-1, 0], [1, 0],
+      [-1, -1],
+      [0, -1],
+      [1, -1],
+      [-1, 0],
+      [1, 0],
       [-1, 1],
     ];
     for (const [dx, dy] of sixNeighbors) set(grid, 2 + dx, 2 + dy, 1);

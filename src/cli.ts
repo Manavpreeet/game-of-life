@@ -1,4 +1,10 @@
-import { create, get as gridGet, set as gridSet, toString as gridToString, type Grid } from "./engine/grid.js";
+import {
+  create,
+  get as gridGet,
+  set as gridSet,
+  toString as gridToString,
+  type Grid,
+} from "./engine/grid.js";
 import { step as denseStep } from "./engine/life.js";
 import { DEFAULT_RULE, parseRulestring, type RuleSet } from "./engine/rules.js";
 import { fromCells, step as sparseStep, toCells, type SparseGrid } from "./engine/sparse.js";

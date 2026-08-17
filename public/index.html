@@ -15,7 +15,10 @@
         padding: 2rem;
         background: #0b0f10;
         color: #e6e6e6;
-        font-family: system-ui, -apple-system, sans-serif;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
       }
       h1 {
         font-size: 1.25rem;
@@ -59,18 +62,24 @@
   <body>
     <h1>Conway's Game of Life</h1>
     <div id="controls">
-      <label>pattern <select id="pattern">
-        <option value="glider">glider</option>
-        <option value="lwss">lwss</option>
-        <option value="pulsar">pulsar</option>
-        <option value="gosper-glider-gun">gosper-glider-gun</option>
-        <option value="block">block</option>
-        <option value="blinker">blinker</option>
-      </select></label>
-      <label>engine <select id="engine">
-        <option value="dense">dense</option>
-        <option value="sparse">sparse</option>
-      </select></label>
+      <label
+        >pattern
+        <select id="pattern">
+          <option value="glider">glider</option>
+          <option value="lwss">lwss</option>
+          <option value="pulsar">pulsar</option>
+          <option value="gosper-glider-gun">gosper-glider-gun</option>
+          <option value="block">block</option>
+          <option value="blinker">blinker</option>
+        </select></label
+      >
+      <label
+        >engine
+        <select id="engine">
+          <option value="dense">dense</option>
+          <option value="sparse">sparse</option>
+        </select></label
+      >
       <label>speed <input id="speed" type="range" min="1" max="30" value="8" /></label>
       <button id="playPause" type="button">Pause</button>
       <button id="reset" type="button">Reset</button>

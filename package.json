@@ -10,6 +10,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "dev": "tsx src/cli.ts",
     "serve": "tsx src/server/server.ts",
     "bench": "tsx bench/bench.ts"

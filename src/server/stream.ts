@@ -79,7 +79,10 @@ export function streamGenerations(res: ServerResponse, options: StreamOptions): 
 
   function currentCells(): Array<[number, number]> {
     if (dense) return denseToCells(dense);
-    return toCells(sparse as SparseGrid).map(([x, y]): [number, number] => [x - offsetX, y - offsetY]);
+    return toCells(sparse as SparseGrid).map(([x, y]): [number, number] => [
+      x - offsetX,
+      y - offsetY,
+    ]);
   }
 
   function sendFrame(): void {

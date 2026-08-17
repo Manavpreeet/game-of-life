@@ -46,7 +46,11 @@ export function step(grid: SparseGrid, rule: RuleSet = DEFAULT_RULE): SparseGrid
 }
 
 /** Run `generations` steps under `rule` (default B3/S23), returning the final live-cell set. */
-export function run(grid: SparseGrid, generations: number, rule: RuleSet = DEFAULT_RULE): SparseGrid {
+export function run(
+  grid: SparseGrid,
+  generations: number,
+  rule: RuleSet = DEFAULT_RULE,
+): SparseGrid {
   let current = grid;
   for (let i = 0; i < generations; i++) {
     current = step(current, rule);

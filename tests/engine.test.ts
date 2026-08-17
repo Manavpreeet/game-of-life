@@ -51,9 +51,10 @@ describe("glider", () => {
 
     const after4 = run(grid, 4);
 
-    const expected = GLIDER_CELLS.map(
-      ([dx, dy]): [number, number] => [ox + 1 + dx, oy + 1 + dy],
-    ).sort(([ax, ay], [bx, by]) => ax - bx || ay - by);
+    const expected = GLIDER_CELLS.map(([dx, dy]): [number, number] => [
+      ox + 1 + dx,
+      oy + 1 + dy,
+    ]).sort(([ax, ay], [bx, by]) => ax - bx || ay - by);
 
     expect(liveCells(after4)).toEqual(expected);
   });

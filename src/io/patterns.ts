@@ -17,9 +17,7 @@ const PATTERN_RLE = {
 
 export type PatternName = keyof typeof PATTERN_RLE;
 
-export const PATTERN_NAMES: readonly PatternName[] = Object.keys(
-  PATTERN_RLE,
-) as PatternName[];
+export const PATTERN_NAMES: readonly PatternName[] = Object.keys(PATTERN_RLE) as PatternName[];
 
 /** Load one of the bundled canonical patterns by name. */
 export function loadPattern(name: PatternName): ParsedRLE {
