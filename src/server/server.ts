@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { readFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseCensusStreamOptions, streamCensus } from "./census-stream.js";
 import { DEFAULT_RULE, parseRulestring } from "../engine/rules.js";
 import { PATTERN_NAMES, type PatternName } from "../io/patterns.js";
 import { streamGenerations, type StreamOptions } from "./stream.js";
@@ -56,6 +57,16 @@ export function createApp(): ReturnType<typeof createServer> {
     if (url.pathname === "/events") {
       try {
         streamGenerations(res, parseStreamOptions(url));
+      } catch (err) {
+        res.writeHead(400, { "Content-Type": "text/plain" });
+        res.end(err instanceof Error ? err.message : "Bad Request");
+      }
+      return;
+    }
+
+    if (url.pathname === "/census-events") {
+      try {
+        void streamCensus(res, parseCensusStreamOptions(url));
       } catch (err) {
         res.writeHead(400, { "Content-Type": "text/plain" });
         res.end(err instanceof Error ? err.message : "Bad Request");

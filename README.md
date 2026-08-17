@@ -38,6 +38,9 @@ engine, and speed controls.
 - Terminal CLI with pattern/rule/engine/speed flags
 - Live canvas viewer streamed over Server-Sent Events, with play/pause/reset/speed
 - GitHub Actions CI (typecheck, lint, test on Node 20.x and 22.x)
+- Automated pattern discovery: seeded random "soup" search that detects,
+  classifies, and tallies emergent still lifes/oscillators/spaceships into a
+  ranked census, on both the CLI (`census` subcommand) and the web (`/census.html`)
 
 ## Quick start
 
@@ -157,10 +160,114 @@ Dense-favorable: 50% random soup on 150x150 (100 generations)
   -> dense is 3.4x faster here
 ```
 
+## Automated Pattern Discovery ("soup search")
+
+A **soup search** runs many random starting grids ("soups"), lets each one
+settle, and automatically detects and classifies the stable objects that
+emerge -- still lifes, oscillators, spaceships, or extinction -- into a
+**census**: a ranked tally of every distinct pattern found and how often it
+appeared. The real Life community runs exactly this at scale: a distributed
+census called [Catagolue](https://catagolue.hatsoft.com/), using canonical
+pattern identifiers called _apgcodes_. This feature is a scoped,
+self-contained version of that idea, built on top of the engine above.
+
+**Pipeline:** `soup -> stabilize -> separate -> canonicalize -> classify -> census`
+
+1. **Soup** (`census/soup.ts`) -- a seeded `mulberry32` PRNG fills a
+   `width x height` grid at a given live-cell density. Same seed, same soup,
+   forever.
+2. **Stabilize** (`census/stabilize.ts`) -- step the grid, hashing the
+   _origin-normalized_ live-cell set each generation. When a hash repeats,
+   the generation gap is the **period** and the absolute-origin delta is the
+   **displacement**. Normalizing before hashing is the trick that lets a
+   moving spaceship's hash ever repeat at all. A generation cap (default 5000) catches soups that never settle.
+3. **Separate** (`census/components.ts`) -- Moore-adjacency connected-component
+   labeling splits the settled grid into isolated objects, merging components
+   whose bounding boxes lie within a small proximity gap (to tolerate
+   oscillators, like a pulsar, whose cells momentarily separate mid-period).
+4. **Canonicalize** (`census/canonical.ts`) -- each object is reduced to a
+   symmetry-invariant key: apply all 8 dihedral transforms (4 rotations x 2
+   reflections), normalize each to its own origin, and keep the
+   lexicographically smallest serialization. Two objects share a key exactly
+   when one is a rotation/reflection of the other.
+5. **Classify** (`census/classify.ts`) -- each object is re-run in isolation
+   on a padded field and fed back through the same cycle detector: period 1 +
+   zero displacement is a still life, period > 1 + zero displacement is an
+   oscillator, non-zero displacement is a spaceship.
+6. **Census** (`census/census.ts`) -- runs `N` seeded soups (seeds
+   `seedStart .. seedStart + N - 1`), aggregates classified objects by
+   canonical key via `census/names.ts` (which builds its key -> name table by
+   canonicalizing the bundled pattern library at startup, not by
+   hand-encoding keys), and renders both a JSON report and a ranked text
+   summary.
+
+### Usage
+
+CLI:
+
+```bash
+npm run dev -- census --soups 5000 --size 16 --density 0.4
+npm run dev -- census --soups 1000 --seed-start 0 --json --out census.json
+```
+
+```
+Census over 5000 soups (16x16, density 0.40, rule B3/S23)
+Still lifes : block x1423  beehive x402  loaf x188  ...
+Oscillators : blinker x510  toad x77  pulsar x9  ...
+Spaceships  : glider x58
+Extinct     : 611 soups
+Unknown     : 3 patterns (reported by canonical key)
+```
+
+Web: run `npm run serve`, open `http://localhost:3000/census.html`, set the
+soup count/size/density/rule and click **Run census** -- the server streams
+progress over SSE (`/census-events`) exactly as the live viewer streams
+generations, then renders the ranked report client-side.
+
+### Reproducibility
+
+A census is fully determined by its options (soup count, size, density, rule,
+seed start) -- the same inputs always produce the same tally, which is what
+makes a census result independently re-verifiable. `tests/census.test.ts`
+locks this in end-to-end, including a fully-predictable all-density-zero case
+where every soup is guaranteed extinct.
+
+### Scope & honesty notes
+
+- The canonical-form + connected-component approach here is a **scoped
+  simplification** of production apgcode/Catagolue, which uses a far more
+  rigorous canonicalization and a distributed, continuously-running census.
+  This feature borrows the idea at a much smaller scale.
+- **Imperfect separation:** the proximity-gap merge in `components.ts` is a
+  heuristic, not a guarantee. Occasionally a component that looked separable
+  in a single settled-grid snapshot turns out, when re-simulated in
+  isolation, to not persist as a still life/oscillator/spaceship (it was
+  still interacting with a neighbor the heuristic didn't merge). Rather than
+  mislabel that as a "pattern", the census counts it under
+  `unclassifiedObjects` and surfaces the count instead of hiding it.
+- **Bounded soup field:** the soup itself steps on a fixed-size dense grid, so
+  a structure that drifts to the edge is clipped exactly as the base engine's
+  "outside the grid is dead" rule already defines -- an accepted property of
+  a bounded field, not a bug.
+- **Performance:** classification re-runs each separated object on a padded
+  dense field (default: 100 generations, 60-cell margin) rather than the
+  sparse engine, so a very large soup count is slow by design in this scoped
+  version. Parallelizing the search across `worker_threads` and switching
+  classification to the sparse engine (both noted as optional, unimplemented
+  extensions in the feature spec this was built from) would be the next step
+  for a production-scale run.
+- **Not handled:** very-high-period oscillators that exceed the generation
+  cap (reported as `unstabilized`), and two spaceships that collide
+  mid-census (whatever debris results is classified as its own object, not
+  specially detected as a collision).
+
 ## References
 
 - [Conway's Game of Life — Wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
 - [Run Length Encoded — LifeWiki](https://conwaylife.com/wiki/Run_Length_Encoded)
+- [Catagolue](https://catagolue.hatsoft.com/) — the production-grade
+  distributed soup-search census, and the origin of the apgcode identifier
+  this feature's canonical key is a simplified stand-in for.
 
 ## License
 

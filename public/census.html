@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pattern Census — Conway's Game of Life</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 2rem;
+        background: #0b0f10;
+        color: #e6e6e6;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      h1 {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin: 0;
+      }
+      nav a {
+        color: #8a8f91;
+        font-size: 0.8rem;
+      }
+      nav a:hover {
+        color: #4ade80;
+      }
+      #controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        font-size: 0.85rem;
+        max-width: 720px;
+        justify-content: center;
+      }
+      #controls select,
+      #controls button,
+      #controls input {
+        background: #161b1d;
+        color: #e6e6e6;
+        border: 1px solid #2a2f31;
+        border-radius: 4px;
+        padding: 0.35rem 0.5rem;
+        font: inherit;
+        width: 5.5rem;
+      }
+      #controls button {
+        cursor: pointer;
+        width: auto;
+      }
+      #controls button:hover:not(:disabled) {
+        border-color: #4ade80;
+      }
+      #controls button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      #progressWrap {
+        width: 100%;
+        max-width: 720px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      #progressBar {
+        height: 6px;
+        border-radius: 3px;
+        background: #161b1d;
+        overflow: hidden;
+      }
+      #progressFill {
+        height: 100%;
+        width: 0%;
+        background: #4ade80;
+        transition: width 0.15s ease-out;
+      }
+      #status {
+        font-size: 0.85rem;
+        color: #8a8f91;
+      }
+      #report {
+        width: 100%;
+        max-width: 720px;
+        font-size: 0.85rem;
+      }
+      .group {
+        margin-bottom: 1rem;
+      }
+      .group h2 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #4ade80;
+        margin: 0 0 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .entries {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 0.8rem;
+      }
+      .entry {
+        white-space: nowrap;
+      }
+      .entry .count {
+        color: #8a8f91;
+      }
+      .unknown {
+        color: #d97757;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Pattern Census</h1>
+    <nav><a href="/">&larr; live viewer</a></nav>
+    <div id="controls">
+      <label>soups <input id="soups" type="number" value="200" min="1" max="5000" /></label>
+      <label>size <input id="size" type="number" value="16" min="4" max="64" /></label>
+      <label
+        >density <input id="density" type="number" value="0.4" min="0" max="1" step="0.05"
+      /></label>
+      <label>rule <input id="rule" type="text" value="B3/S23" /></label>
+      <label>seed start <input id="seedStart" type="number" value="0" min="0" /></label>
+      <button id="run" type="button">Run census</button>
+    </div>
+    <div id="progressWrap">
+      <div id="progressBar"><div id="progressFill"></div></div>
+      <div id="status">idle</div>
+    </div>
+    <div id="report"></div>
+    <script src="census.js"></script>
+  </body>
+</html>

@@ -1,4 +1,6 @@
+import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { renderCensusSummary, runCensus, type CensusOptions } from "./census/census.js";
 import {
   create,
   get as gridGet,
@@ -136,7 +138,65 @@ async function runSparse(opts: CliOptions, pattern: Grid, name: string): Promise
   }
 }
 
+function parseFlags(argv: readonly string[]): Record<string, string> {
+  const raw: Record<string, string> = {};
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg?.startsWith("--")) {
+      const key = arg.slice(2);
+      const next = argv[i + 1];
+      if (next !== undefined && !next.startsWith("--")) {
+        raw[key] = next;
+        i++;
+      } else {
+        raw[key] = "true";
+      }
+    }
+  }
+  return raw;
+}
+
+/**
+ * `census` subcommand: run a soup search and print (or write) a ranked
+ * report. Progress is streamed to stderr so it doesn't pollute stdout when
+ * `--json --out` is used to redirect the report into a file.
+ */
+async function runCensusCommand(argv: readonly string[]): Promise<void> {
+  const raw = parseFlags(argv);
+  const size = raw.size ? Number(raw.size) : 16;
+  const asJson = raw.json === "true";
+
+  const options: Partial<CensusOptions> = {
+    soups: raw.soups ? Number(raw.soups) : 200,
+    width: size,
+    height: size,
+    density: raw.density ? Number(raw.density) : 0.4,
+    rule: raw.rule ? parseRulestring(raw.rule) : DEFAULT_RULE,
+    maxGenerations: raw["max-gens"] ? Number(raw["max-gens"]) : 5000,
+    seedStart: raw["seed-start"] ? Number(raw["seed-start"]) : 0,
+  };
+
+  const report = runCensus(options, (done, total) => {
+    process.stderr.write(`\r${done} / ${total} soups`);
+  });
+  process.stderr.write("\n");
+
+  const output = asJson ? JSON.stringify(report, null, 2) : renderCensusSummary(report);
+  if (raw.out) {
+    await writeFile(raw.out, output);
+    console.log(`Wrote census report to ${raw.out}`);
+  } else {
+    console.log(output);
+  }
+}
+
 async function main(): Promise<void> {
+  const [subcommand, ...rest] = process.argv.slice(2);
+  if (subcommand === "census") {
+    await runCensusCommand(rest);
+    return;
+  }
+
   const opts = parseArgs(process.argv.slice(2));
   const { grid: pattern, name } = loadPattern(opts.pattern);
   const label = name ?? opts.pattern;
