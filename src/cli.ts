@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import {
   create,
   get as gridGet,
@@ -20,7 +21,7 @@ interface CliOptions {
   readonly delayMs: number;
 }
 
-function parseArgs(argv: readonly string[]): CliOptions {
+export function parseArgs(argv: readonly string[]): CliOptions {
   const raw: Record<string, string> = {};
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -60,11 +61,11 @@ function clearScreen(): void {
   process.stdout.write("\x1b[2J\x1b[H");
 }
 
-function renderDense(grid: Grid): string {
+export function renderDense(grid: Grid): string {
   return gridToString(grid, "█", "·");
 }
 
-function renderSparseViewport(
+export function renderSparseViewport(
   cells: ReadonlyArray<readonly [number, number]>,
   offsetX: number,
   offsetY: number,
@@ -83,7 +84,7 @@ function renderSparseViewport(
   return rows.join("\n");
 }
 
-function embedInDenseGrid(pattern: Grid, width: number, height: number): Grid {
+export function embedInDenseGrid(pattern: Grid, width: number, height: number): Grid {
   const w = Math.max(width, pattern.width);
   const h = Math.max(height, pattern.height);
   const grid = create(w, h);
@@ -97,7 +98,7 @@ function embedInDenseGrid(pattern: Grid, width: number, height: number): Grid {
   return grid;
 }
 
-function patternToCells(pattern: Grid): Array<[number, number]> {
+export function patternToCells(pattern: Grid): Array<[number, number]> {
   const cells: Array<[number, number]> = [];
   for (let y = 0; y < pattern.height; y++) {
     for (let x = 0; x < pattern.width; x++) {
@@ -147,7 +148,10 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err: unknown) => {
-  console.error(err instanceof Error ? err.message : String(err));
-  process.exitCode = 1;
-});
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMainModule) {
+  main().catch((err: unknown) => {
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exitCode = 1;
+  });
+}
