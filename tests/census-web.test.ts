@@ -41,7 +41,10 @@ function setupDom(): void {
       <input id="soups" type="number" value="200" />
       <input id="size" type="number" value="16" />
       <input id="density" type="number" value="0.4" />
-      <input id="rule" type="text" value="B3/S23" />
+      <select id="rule">
+        <option value="B3/S23">Conway (B3/S23)</option>
+        <option value="B36/S23">HighLife (B36/S23)</option>
+      </select>
       <input id="seedStart" type="number" value="0" />
       <button id="run" type="button">Run census</button>
     </div>
@@ -57,13 +60,27 @@ function setupDom(): void {
   `;
 }
 
+// jsdom implements <canvas> but not a real 2D rendering context (that needs
+// the native `canvas` package, which this project deliberately doesn't
+// depend on -- see pattern-grid.js's comment on why it degrades gracefully
+// without one). Stub a no-op context so pattern-grid's draw loop has
+// something to call without throwing.
+class FakeContext {
+  fillStyle = "";
+  fillRect(): void {}
+}
+
 async function loadCensus(): Promise<void> {
   vi.resetModules();
   FakeEventSource.instances.length = 0;
   setupDom();
   vi.stubGlobal("EventSource", FakeEventSource);
+  HTMLCanvasElement.prototype.getContext = (() =>
+    new FakeContext()) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   // @ts-expect-error plain browser scripts with no type declarations
   await import("../public/pattern-view.js");
+  // @ts-expect-error plain browser scripts with no type declarations
+  await import("../public/pattern-grid.js");
   // @ts-expect-error plain browser scripts with no type declarations
   await import("../public/census.js");
 }
@@ -122,10 +139,13 @@ const SAMPLE_REPORT = {
 
 describe("census web page", () => {
   beforeEach(async () => {
+    vi.useFakeTimers();
     await loadCensus();
   });
 
   afterEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -190,10 +210,15 @@ describe("census web page", () => {
     const preview = document.getElementById("previewPane") as HTMLElement;
     expect(preview.textContent).toContain("block");
     expect(preview.textContent).toContain("still-life");
-    expect(preview.querySelector("pattern-view")).not.toBeNull();
+    const grid = preview.querySelector("pattern-grid");
+    expect(grid).not.toBeNull();
+    expect(grid?.getAttribute("rule")).toBe("B3/S23");
+    expect(JSON.parse(grid?.getAttribute("cells") ?? "[]")).toEqual(
+      SAMPLE_REPORT.entries[0]?.examplePattern,
+    );
   });
 
-  it("switching the dropdown updates the preview to the selected entry", () => {
+  it("switching the dropdown updates the preview (and its live grid) to the selected entry", () => {
     clickRun();
     currentSource().emit("done", SAMPLE_REPORT);
 
@@ -206,6 +231,9 @@ describe("census web page", () => {
     expect(preview.textContent).toContain("spaceship");
     expect(preview.textContent).toContain("period");
     expect(preview.textContent).toContain("4");
+    expect(
+      JSON.parse(preview.querySelector("pattern-grid")?.getAttribute("cells") ?? "[]"),
+    ).toEqual(SAMPLE_REPORT.entries[1]?.examplePattern);
   });
 
   it("hides the inspector when a census produces no classified entries", () => {

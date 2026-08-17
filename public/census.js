@@ -13,6 +13,7 @@ const previewPane = document.getElementById("previewPane");
 
 let source = null;
 let currentEntries = [];
+let currentRule = "B3/S23";
 
 function streamParams() {
   const params = new URLSearchParams();
@@ -68,15 +69,20 @@ function renderReport(report) {
   reportEl.innerHTML = html.join("");
 }
 
+/** Markup for a `<pattern-grid>` element (see pattern-grid.js) animating `cells` live under `rule`. */
+function patternGrid(cells, rule) {
+  return `<pattern-grid cells='${JSON.stringify(cells)}' rule="${rule}" cell-px="14" margin="10"></pattern-grid>`;
+}
+
 function renderPreview(index) {
   const entry = currentEntries[index];
   if (!entry) {
     previewPane.innerHTML = "";
     return;
   }
-  const big = patternView(entry.examplePattern, 14);
+  const grid = patternGrid(entry.examplePattern, currentRule);
   previewPane.innerHTML =
-    `${big}` +
+    `${grid}` +
     `<dl>` +
     `<dt>name</dt><dd>${entry.name}</dd>` +
     `<dt>type</dt><dd>${entry.type}</dd>` +
@@ -89,6 +95,7 @@ function renderPreview(index) {
 
 function populateInspector(report) {
   currentEntries = report.entries;
+  currentRule = report.rule;
   if (currentEntries.length === 0) {
     inspectorEl.style.display = "none";
     patternSelect.innerHTML = "";
