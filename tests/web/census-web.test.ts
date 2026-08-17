@@ -52,6 +52,9 @@ function setupDom(): void {
       <div id="progressBar"><div id="progressFill"></div></div>
       <div id="status">idle</div>
     </div>
+    <div id="runPreview">
+      <pattern-grid id="runGrid" cell-px="8" margin="6"></pattern-grid>
+    </div>
     <div id="report"></div>
     <div id="inspector">
       <select id="patternSelect"></select>
@@ -166,6 +169,58 @@ describe("census web page", () => {
   it("disables the run button while a census is in flight", () => {
     clickRun();
     expect((document.getElementById("run") as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  describe("live soup preview", () => {
+    function runGrid(): Element {
+      return document.getElementById("runGrid") as Element;
+    }
+
+    it("shows the run preview, seeded from the form's own seed start/size/density/rule", () => {
+      clickRun();
+      expect((document.getElementById("runPreview") as HTMLElement).style.display).toBe("flex");
+      const expectedCells = window.LifeEngine.generateSoupCells(0, 16, 16, 0.4);
+      expect(JSON.parse(runGrid().getAttribute("cells") ?? "[]")).toEqual(expectedCells);
+      expect(runGrid().getAttribute("rule")).toBe("B3/S23");
+    });
+
+    it("cycles to the next seed after the preview duration elapses", () => {
+      clickRun();
+      vi.advanceTimersByTime(4000);
+      const expectedCells = window.LifeEngine.generateSoupCells(1, 16, 16, 0.4);
+      expect(JSON.parse(runGrid().getAttribute("cells") ?? "[]")).toEqual(expectedCells);
+    });
+
+    it("previews from seedStart, not always 0", () => {
+      (document.getElementById("seedStart") as HTMLInputElement).value = "50";
+      clickRun();
+      const expectedCells = window.LifeEngine.generateSoupCells(50, 16, 16, 0.4);
+      expect(JSON.parse(runGrid().getAttribute("cells") ?? "[]")).toEqual(expectedCells);
+    });
+
+    it("stops the preview animation and hides the panel when the census finishes", () => {
+      clickRun();
+      const stopSpy = vi.spyOn(runGrid() as unknown as { stop: () => void }, "stop");
+      currentSource().emit("done", SAMPLE_REPORT);
+      expect(stopSpy).toHaveBeenCalled();
+      expect((document.getElementById("runPreview") as HTMLElement).style.display).toBe("none");
+    });
+
+    it("stops the preview animation and hides the panel on a stream error", () => {
+      clickRun();
+      const stopSpy = vi.spyOn(runGrid() as unknown as { stop: () => void }, "stop");
+      currentSource().onerror?.();
+      expect(stopSpy).toHaveBeenCalled();
+      expect((document.getElementById("runPreview") as HTMLElement).style.display).toBe("none");
+    });
+
+    it("does not keep cycling seeds after the census finishes", () => {
+      clickRun();
+      currentSource().emit("done", SAMPLE_REPORT);
+      const cellsAtDone = runGrid().getAttribute("cells");
+      vi.advanceTimersByTime(4000 * 3);
+      expect(runGrid().getAttribute("cells")).toBe(cellsAtDone);
+    });
   });
 
   it("updates the progress bar and status text on progress events", () => {

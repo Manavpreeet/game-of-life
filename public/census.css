@@ -123,7 +123,9 @@ nav a:hover {
 .group {
   margin-bottom: 1rem;
 }
-.group h2 {
+.group h2,
+#inspector h2,
+#runPreview h2 {
   font-size: 0.85rem;
   font-weight: 600;
   color: #4ade80;
@@ -159,6 +161,16 @@ pattern-view rect {
   fill: #4ade80;
 }
 
+/* Run preview */
+#runPreview {
+  display: none;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+#runPreview h2 {
+  margin: 0;
+}
+
 /* Inspector */
 #inspector {
   width: 100%;
@@ -168,12 +180,7 @@ pattern-view rect {
   gap: 0.6rem;
 }
 #inspector h2 {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #4ade80;
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 #inspector select {
   background: #161b1d;

@@ -10,10 +10,13 @@ const reportEl = document.getElementById("report");
 const inspectorEl = document.getElementById("inspector");
 const patternSelect = document.getElementById("patternSelect");
 const previewPane = document.getElementById("previewPane");
+const runPreviewEl = document.getElementById("runPreview");
+const runGrid = document.getElementById("runGrid");
 
 let source = null;
 let currentEntries = [];
 let currentRule = "B3/S23";
+let soupPreviewTimer = null;
 
 function streamParams() {
   const params = new URLSearchParams();
@@ -124,6 +127,44 @@ function disconnect() {
   }
 }
 
+/**
+ * A soup census has no single "current grid" worth streaming from the
+ * server (it settles hundreds of soups server-side, often faster than a
+ * human could watch any one of them). Instead, while a run is in flight,
+ * this cycles a live `<pattern-grid>` through the *exact same* seeded soups
+ * the census itself is classifying -- regenerated client-side via
+ * LifeEngine.generateSoupCells, which is bit-for-bit identical to the
+ * server's generator for the same seed (see life-engine.js) -- so what's on
+ * screen is real, reproducible census input, not a generic placeholder
+ * animation.
+ */
+const SOUP_PREVIEW_DURATION_MS = 4000;
+
+function startSoupPreview(seedStart, size, density, rule) {
+  stopSoupPreview();
+  let previewSeed = seedStart;
+
+  function showNext() {
+    const cells = window.LifeEngine.generateSoupCells(previewSeed, size, size, density);
+    runGrid.setAttribute("rule", rule);
+    runGrid.setAttribute("cells", JSON.stringify(cells));
+    previewSeed++;
+  }
+
+  runPreviewEl.style.display = "flex";
+  showNext();
+  soupPreviewTimer = setInterval(showNext, SOUP_PREVIEW_DURATION_MS);
+}
+
+function stopSoupPreview() {
+  if (soupPreviewTimer) {
+    clearInterval(soupPreviewTimer);
+    soupPreviewTimer = null;
+  }
+  runGrid.stop?.();
+  runPreviewEl.style.display = "none";
+}
+
 function run() {
   disconnect();
   reportEl.innerHTML = "";
@@ -132,6 +173,11 @@ function run() {
   progressFill.style.width = "0%";
   statusEl.textContent = "starting…";
   runButton.disabled = true;
+
+  const seedStart = Number(seedStartInput.value) || 0;
+  const size = Number(sizeInput.value) || 16;
+  const density = Number(densityInput.value) || 0.4;
+  startSoupPreview(seedStart, size, density, ruleInput.value);
 
   source = new EventSource("/census-events?" + streamParams().toString());
 
@@ -146,6 +192,7 @@ function run() {
     const report = JSON.parse(event.data);
     progressFill.style.width = "100%";
     statusEl.textContent = `done — ${report.soups} soups (${report.width}x${report.height}, density ${report.density.toFixed(2)}, rule ${report.rule})`;
+    stopSoupPreview();
     renderReport(report);
     populateInspector(report);
     disconnect();
@@ -154,6 +201,7 @@ function run() {
 
   source.onerror = () => {
     statusEl.textContent = "connection lost";
+    stopSoupPreview();
     disconnect();
     runButton.disabled = false;
   };
