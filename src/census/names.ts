@@ -2,6 +2,7 @@ import { get, type Grid } from "../engine/grid.js";
 import { loadPattern, PATTERN_NAMES, type PatternName } from "../io/patterns.js";
 import { parseRLE } from "../io/rle.js";
 import { canonicalKey } from "./canonical.js";
+import { classifyObject } from "./classify.js";
 
 /**
  * A few common still lifes/oscillators the base pattern library doesn't
@@ -31,16 +32,38 @@ function liveCellsOf(grid: Grid): Array<[number, number]> {
   return cells;
 }
 
+/**
+ * The census's own phase-invariant key for a still, moving, or oscillating
+ * pattern -- reusing `classifyObject` (rather than a plain `canonicalKey`
+ * call) is what keeps this table's keys consistent with the keys census
+ * objects are actually looked up by; a moving/oscillating pattern's *static*
+ * canonical key alone isn't guaranteed to match every phase it can be
+ * captured in. Falls back to the plain key for the rare case (e.g. a gun
+ * that never settles into a finite-period repeat) `classifyObject` can't
+ * resolve to a stable period.
+ */
+function keyFor(cells: Array<[number, number]>): string {
+  const classified = classifyObject(cells);
+  if (
+    classified.type === "still-life" ||
+    classified.type === "oscillator" ||
+    classified.type === "spaceship"
+  ) {
+    return classified.canonicalKey;
+  }
+  return canonicalKey(cells);
+}
+
 /** Build a canonical-key -> display-name table by canonicalizing the bundled pattern library at startup, rather than hand-encoding keys. */
 function buildNameTable(): Map<string, string> {
   const table = new Map<string, string>();
   for (const name of PATTERN_NAMES) {
     const { grid } = loadPattern(name);
-    table.set(canonicalKey(liveCellsOf(grid)), DISPLAY_NAMES[name] ?? name);
+    table.set(keyFor(liveCellsOf(grid)), DISPLAY_NAMES[name] ?? name);
   }
   for (const [name, rle] of Object.entries(EXTRA_PATTERNS)) {
     const { grid } = parseRLE(rle);
-    table.set(canonicalKey(liveCellsOf(grid)), name);
+    table.set(keyFor(liveCellsOf(grid)), name);
   }
   return table;
 }

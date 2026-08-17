@@ -7,8 +7,12 @@ const seedStartInput = document.getElementById("seedStart");
 const progressFill = document.getElementById("progressFill");
 const statusEl = document.getElementById("status");
 const reportEl = document.getElementById("report");
+const inspectorEl = document.getElementById("inspector");
+const patternSelect = document.getElementById("patternSelect");
+const previewPane = document.getElementById("previewPane");
 
 let source = null;
+let currentEntries = [];
 
 function streamParams() {
   const params = new URLSearchParams();
@@ -26,6 +30,11 @@ function groupLabel(type) {
   return "Spaceships";
 }
 
+/** Markup for a `<pattern-view>` element (see pattern-view.js) showing `cells` at `cellSize` px/cell. */
+function patternView(cells, cellSize) {
+  return `<pattern-view cells='${JSON.stringify(cells)}' cell-size="${cellSize}"></pattern-view>`;
+}
+
 function renderReport(report) {
   const groups = ["still-life", "oscillator", "spaceship"];
   const html = [];
@@ -36,8 +45,9 @@ function renderReport(report) {
     html.push(`<div class="group"><h2>${groupLabel(type)}</h2><div class="entries">`);
     for (const entry of items) {
       const cls = entry.name.startsWith("unknown(") ? "entry unknown" : "entry";
+      const thumb = patternView(entry.examplePattern, 4);
       html.push(
-        `<span class="${cls}">${entry.name} <span class="count">x${entry.count}</span></span>`,
+        `<span class="${cls}">${thumb} ${entry.name} <span class="count">x${entry.count}</span></span>`,
       );
     }
     html.push("</div></div>");
@@ -58,6 +68,48 @@ function renderReport(report) {
   reportEl.innerHTML = html.join("");
 }
 
+function renderPreview(index) {
+  const entry = currentEntries[index];
+  if (!entry) {
+    previewPane.innerHTML = "";
+    return;
+  }
+  const big = patternView(entry.examplePattern, 14);
+  previewPane.innerHTML =
+    `${big}` +
+    `<dl>` +
+    `<dt>name</dt><dd>${entry.name}</dd>` +
+    `<dt>type</dt><dd>${entry.type}</dd>` +
+    `<dt>period</dt><dd>${entry.period}</dd>` +
+    `<dt>size</dt><dd>${entry.boundingBox.width}x${entry.boundingBox.height}</dd>` +
+    `<dt>found</dt><dd>${entry.count} time${entry.count === 1 ? "" : "s"}</dd>` +
+    `<dt>canonical key</dt><dd>${entry.canonicalKey}</dd>` +
+    `</dl>`;
+}
+
+function populateInspector(report) {
+  currentEntries = report.entries;
+  if (currentEntries.length === 0) {
+    inspectorEl.style.display = "none";
+    patternSelect.innerHTML = "";
+    previewPane.innerHTML = "";
+    return;
+  }
+
+  patternSelect.innerHTML = currentEntries
+    .map(
+      (entry, i) => `<option value="${i}">${entry.name} (${entry.type}) x${entry.count}</option>`,
+    )
+    .join("");
+  inspectorEl.style.display = "flex";
+  patternSelect.selectedIndex = 0;
+  renderPreview(0);
+}
+
+patternSelect.addEventListener("change", () => {
+  renderPreview(Number(patternSelect.value));
+});
+
 function disconnect() {
   if (source) {
     source.close();
@@ -68,6 +120,8 @@ function disconnect() {
 function run() {
   disconnect();
   reportEl.innerHTML = "";
+  inspectorEl.style.display = "none";
+  currentEntries = [];
   progressFill.style.width = "0%";
   statusEl.textContent = "starting…";
   runButton.disabled = true;
@@ -86,6 +140,7 @@ function run() {
     progressFill.style.width = "100%";
     statusEl.textContent = `done — ${report.soups} soups (${report.width}x${report.height}, density ${report.density.toFixed(2)}, rule ${report.rule})`;
     renderReport(report);
+    populateInspector(report);
     disconnect();
     runButton.disabled = false;
   });

@@ -4,123 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pattern Census — Conway's Game of Life</title>
-    <style>
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        padding: 2rem;
-        background: #0b0f10;
-        color: #e6e6e6;
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-      }
-      h1 {
-        font-size: 1.25rem;
-        font-weight: 500;
-        margin: 0;
-      }
-      nav a {
-        color: #8a8f91;
-        font-size: 0.8rem;
-      }
-      nav a:hover {
-        color: #4ade80;
-      }
-      #controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        align-items: center;
-        font-size: 0.85rem;
-        max-width: 720px;
-        justify-content: center;
-      }
-      #controls select,
-      #controls button,
-      #controls input {
-        background: #161b1d;
-        color: #e6e6e6;
-        border: 1px solid #2a2f31;
-        border-radius: 4px;
-        padding: 0.35rem 0.5rem;
-        font: inherit;
-        width: 5.5rem;
-      }
-      #controls button {
-        cursor: pointer;
-        width: auto;
-      }
-      #controls button:hover:not(:disabled) {
-        border-color: #4ade80;
-      }
-      #controls button:disabled {
-        opacity: 0.5;
-        cursor: default;
-      }
-      #progressWrap {
-        width: 100%;
-        max-width: 720px;
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-      }
-      #progressBar {
-        height: 6px;
-        border-radius: 3px;
-        background: #161b1d;
-        overflow: hidden;
-      }
-      #progressFill {
-        height: 100%;
-        width: 0%;
-        background: #4ade80;
-        transition: width 0.15s ease-out;
-      }
-      #status {
-        font-size: 0.85rem;
-        color: #8a8f91;
-      }
-      #report {
-        width: 100%;
-        max-width: 720px;
-        font-size: 0.85rem;
-      }
-      .group {
-        margin-bottom: 1rem;
-      }
-      .group h2 {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #4ade80;
-        margin: 0 0 0.4rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .entries {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem 0.8rem;
-      }
-      .entry {
-        white-space: nowrap;
-      }
-      .entry .count {
-        color: #8a8f91;
-      }
-      .unknown {
-        color: #d97757;
-      }
-      table {
-        border-collapse: collapse;
-        width: 100%;
-      }
-    </style>
+    <link rel="stylesheet" href="census.css" />
   </head>
   <body>
     <h1>Pattern Census</h1>
@@ -140,6 +24,12 @@
       <div id="status">idle</div>
     </div>
     <div id="report"></div>
+    <div id="inspector">
+      <h2>Inspect a pattern</h2>
+      <select id="patternSelect"></select>
+      <div id="previewPane"></div>
+    </div>
+    <script src="pattern-view.js"></script>
     <script src="census.js"></script>
   </body>
 </html>

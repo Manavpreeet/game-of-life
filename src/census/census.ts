@@ -21,6 +21,8 @@ export interface CensusEntry {
   readonly name: string;
   readonly type: ObjectType;
   readonly count: number;
+  readonly period: number;
+  readonly boundingBox: { readonly width: number; readonly height: number };
   readonly examplePattern: ReadonlyArray<readonly [number, number]>;
 }
 
@@ -52,6 +54,8 @@ interface TallyEntry {
   name: string;
   type: ObjectType;
   count: number;
+  period: number;
+  boundingBox: { width: number; height: number };
   example: ReadonlyArray<readonly [number, number]>;
 }
 
@@ -100,6 +104,8 @@ function processSoup(
         name: nameFor(key),
         type: classified.type,
         count: 1,
+        period: classified.period,
+        boundingBox: classified.boundingBox,
         example: component.cells,
       });
     }
@@ -131,6 +137,8 @@ function finalizeReport(
       name: entry.name,
       type: entry.type,
       count: entry.count,
+      period: entry.period,
+      boundingBox: entry.boundingBox,
       examplePattern: entry.example,
     }))
     .sort(
