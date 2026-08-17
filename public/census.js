@@ -57,6 +57,7 @@ function renderReport(report) {
     html.push("</div></div>");
   }
 
+  const hasUnknown = report.entries.some((entry) => entry.name.startsWith("unknown("));
   html.push(
     `<div class="group"><h2>Summary</h2><div class="entries">` +
       `<span class="entry">extinct <span class="count">${report.extinctSoups}</span></span>` +
@@ -66,7 +67,15 @@ function renderReport(report) {
       (report.unclassifiedObjects > 0
         ? `<span class="entry">unclassified objects <span class="count">${report.unclassifiedObjects}</span></span>`
         : "") +
-      `</div></div>`,
+      `</div>` +
+      `<p class="hint">extinct = soup died out completely. unstabilized = didn't settle within the ` +
+      `generation cap. unclassified objects = looked separable in one snapshot but didn't hold up as ` +
+      `a persistent pattern once re-simulated alone.` +
+      (hasUnknown
+        ? ` unknown(...) = a real still life/oscillator/spaceship, just not one of the few named ` +
+          `in this build's library -- shown by its own canonical key instead of a name.`
+        : "") +
+      `</p></div>`,
   );
 
   reportEl.innerHTML = html.join("");

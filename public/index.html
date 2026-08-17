@@ -57,6 +57,14 @@
         font-size: 0.85rem;
         color: #8a8f91;
       }
+      .hint {
+        font-size: 0.72rem;
+        line-height: 1.35;
+        color: #6b7173;
+        max-width: 640px;
+        text-align: center;
+        margin: 0;
+      }
       nav a {
         color: #8a8f91;
         font-size: 0.8rem;
@@ -83,15 +91,27 @@
       >
       <label
         >engine
-        <select id="engine">
+        <select
+          id="engine"
+          title="dense: bounded field, can hit a wall. sparse: unbounded, never does."
+        >
           <option value="dense">dense</option>
           <option value="sparse">sparse</option>
         </select></label
       >
-      <label>speed <input id="speed" type="range" min="1" max="30" value="8" /></label>
+      <label
+        >speed
+        <input id="speed" type="range" min="1" max="30" value="8" title="generations per second"
+      /></label>
       <button id="playPause" type="button">Pause</button>
       <button id="reset" type="button">Reset</button>
     </div>
+    <p class="hint">
+      <strong>dense</strong> steps a fixed-size field -- a fast pattern like glider can fly into the
+      wall and decay into debris (that's expected, not a bug). <strong>sparse</strong> has no
+      boundary, so it never does. Drag the canvas to pan and follow a pattern that's drifted out of
+      view.
+    </p>
     <canvas id="board" width="720" height="432"></canvas>
     <div id="status">connecting...</div>
     <script src="viewer.js"></script>
