@@ -1,0 +1,16 @@
+{
+  "name": "game-of-life",
+  "version": "0.1.0",
+  "description": "Conway's Game of Life: dense and sparse TypeScript engines, RLE import, CLI, and an SSE streaming viewer.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Manavpreet Singh",
+  "scripts": {
+    "test": "echo 'vitest not yet configured' && exit 1",
+    "test:watch": "echo 'vitest not yet configured' && exit 1",
+    "typecheck": "echo 'typescript not yet configured' && exit 1",
+    "lint": "echo 'eslint not yet configured' && exit 1",
+    "dev": "echo 'tsx not yet configured' && exit 1",
+    "bench": "echo 'bench not yet configured' && exit 1"
+  }
+}
