@@ -66,7 +66,8 @@ interface Counters {
   unclassifiedObjects: number;
 }
 
-function resolveOptions(options: Partial<CensusOptions>): CensusOptions {
+/** Fill in defaults for any options a caller (e.g. a CLI, or a worker shard) didn't specify. */
+export function resolveOptions(options: Partial<CensusOptions>): CensusOptions {
   return { ...DEFAULT_OPTIONS, ...options };
 }
 

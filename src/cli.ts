@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { renderCensusSummary, runCensus, type CensusOptions } from "./census/census.js";
+import { runCensusParallel } from "./census/parallel.js";
 import {
   create,
   get as gridGet,
@@ -159,14 +160,18 @@ function parseFlags(argv: readonly string[]): Record<string, string> {
 /**
  * `census` subcommand: run a soup search and print (or write) a ranked
  * report. Progress is streamed to stderr so it doesn't pollute stdout when
- * `--json --out` is used to redirect the report into a file.
+ * `--json --out` is used to redirect the report into a file. `--workers N`
+ * (N > 1) shards the run across N worker_threads (see census/parallel.ts)
+ * instead of running single-threaded; the result is identical either way,
+ * only wall-clock time differs.
  */
 async function runCensusCommand(argv: readonly string[]): Promise<void> {
   const raw = parseFlags(argv);
   const size = raw.size ? Number(raw.size) : 16;
   const asJson = raw.json === "true";
+  const workers = raw.workers ? Number(raw.workers) : 1;
 
-  const options: Partial<CensusOptions> = {
+  const options: CensusOptions = {
     soups: raw.soups ? Number(raw.soups) : 200,
     width: size,
     height: size,
@@ -176,9 +181,15 @@ async function runCensusCommand(argv: readonly string[]): Promise<void> {
     seedStart: raw["seed-start"] ? Number(raw["seed-start"]) : 0,
   };
 
-  const report = runCensus(options, (done, total) => {
-    process.stderr.write(`\r${done} / ${total} soups`);
-  });
+  let report;
+  if (workers > 1) {
+    process.stderr.write(`running across ${workers} workers...\n`);
+    report = await runCensusParallel(options, workers);
+  } else {
+    report = runCensus(options, (done, total) => {
+      process.stderr.write(`\r${done} / ${total} soups`);
+    });
+  }
   process.stderr.write("\n");
 
   const output = asJson ? JSON.stringify(report, null, 2) : renderCensusSummary(report);

@@ -1,5 +1,10 @@
 import { Worker } from "node:worker_threads";
-import { mergeCensusReports, type CensusOptions, type CensusReport } from "./census.js";
+import {
+  mergeCensusReports,
+  resolveOptions,
+  type CensusOptions,
+  type CensusReport,
+} from "./census.js";
 
 const WORKER_MODULE_URL = new URL("./census-worker-bootstrap.mjs", import.meta.url);
 
@@ -64,10 +69,11 @@ function runShard(options: CensusOptions, shard: CensusShard): Promise<CensusRep
  * machines, not for any difference in output.
  */
 export async function runCensusParallel(
-  options: CensusOptions,
+  options: Partial<CensusOptions>,
   workerCount: number,
 ): Promise<CensusReport> {
-  const shards = computeShards(options.soups, options.seedStart, workerCount);
-  const reports = await Promise.all(shards.map((shard) => runShard(options, shard)));
+  const resolved = resolveOptions(options);
+  const shards = computeShards(resolved.soups, resolved.seedStart, workerCount);
+  const reports = await Promise.all(shards.map((shard) => runShard(resolved, shard)));
   return mergeCensusReports(reports);
 }
